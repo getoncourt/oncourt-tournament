@@ -6,6 +6,7 @@ import { PlayersScreen } from './screens/PlayersScreen'
 import { StandingsScreen } from './screens/StandingsScreen'
 import { PlaySheet } from './components/PlaySheet'
 import { FinishSheet } from './components/FinishSheet'
+import { CourtActionsSheet } from './components/CourtActionsSheet'
 import { Toast } from './components/Toast'
 
 type Tab = 'courts' | 'schedule' | 'players' | 'standings'
@@ -24,7 +25,7 @@ const readTab = (): Tab => {
 
 export default function App() {
   const [tab, setTabState] = useState<Tab>(readTab)
-  const liveCount = useStore((s) => s.matches.filter((m) => m.status === 'live').length)
+  const liveCount = useStore((s) => s.matches.filter((m) => m.status === 'live' || m.status === 'called').length)
   const queuedCount = useStore((s) => s.matches.filter((m) => m.status === 'queued').length)
   const resetDemo = useStore((s) => s.resetDemo)
   const clearAll = useStore((s) => s.clearAll)
@@ -111,6 +112,7 @@ export default function App() {
 
       <PlaySheet />
       <FinishSheet />
+      <CourtActionsSheet />
       <Toast />
     </div>
   )

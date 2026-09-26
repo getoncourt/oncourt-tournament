@@ -40,6 +40,11 @@ describe('nextEligible', () => {
     expect(nextEligible(matches)?.id).toBe('3')
   })
 
+  it('treats players on a called (preparing) court as busy', () => {
+    const matches = [m('1', 'a', 'b', 'called'), m('2', 'b', 'c'), m('3', 'd', 'e')]
+    expect(nextEligible(matches)?.id).toBe('3')
+  })
+
   it('returns undefined when nothing is playable', () => {
     expect(nextEligible([m('1', 'a', 'b', 'live'), m('2', 'b', 'a')])).toBeUndefined()
   })

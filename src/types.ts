@@ -4,7 +4,8 @@ export type Group = { id: string; name: string; color: string }
 
 export type Court = { id: string; name: string }
 
-export type MatchStatus = 'queued' | 'live' | 'done'
+/** queued → called (on court, calling players) → live (playing) → done */
+export type MatchStatus = 'queued' | 'called' | 'live' | 'done'
 
 export type Match = {
   id: string
@@ -14,7 +15,8 @@ export type Match = {
   p2: string
   status: MatchStatus
   courtId?: string
-  startedAt?: number
+  calledAt?: number // assigned to court, players being called
+  startedAt?: number // players ready, match began
   finishedAt?: number
   winnerId?: string
   score?: string

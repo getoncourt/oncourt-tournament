@@ -4,7 +4,8 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-
 import { CSS } from '@dnd-kit/utilities'
 import { useStore } from '../store'
 import { useUi } from '../ui'
-import { busyPlayerIds, isPlayable } from '../logic/courts'
+import { busyPlayerIds, isPlayable, onCourt } from '../logic/courts'
+import { fmtDur } from '../logic/time'
 import type { Match } from '../types'
 import { MatchCard } from '../components/MatchCard'
 import { Button } from '../components/Button'
@@ -19,13 +20,15 @@ export function ScheduleScreen() {
   const reopen = useStore((s) => s.reopenMatch)
   const showToast = useStore((s) => s.showToast)
   const openFinish = useUi((s) => s.openFinish)
+  const openActions = useUi((s) => s.openActions)
+  const startPlay = useStore((s) => s.startPlay)
   const sensors = useDndSensors()
   const [filter, setFilter] = useState<string | null>(null)
   const [showDone, setShowDone] = useState(false)
   const [dragId, setDragId] = useState<string | null>(null)
 
   const inFilter = (m: Match) => !filter || m.groupId === filter
-  const live = matches.filter((m) => m.status === 'live' && inFilter(m))
+  const live = matches.filter((m) => onCourt(m) && inFilter(m))
   const queued = matches.filter((m) => m.status === 'queued' && inFilter(m))
   const done = matches.filter((m) => m.status === 'done' && inFilter(m))
   const busy = busyPlayerIds(matches)
@@ -80,11 +83,32 @@ export function ScheduleScreen() {
             <MatchCard
               key={m.id}
               match={m}
-              note={<span className="text-court">● {courtName(m.courtId)}</span>}
+              note={
+                m.status === 'called' ? (
+                  <span className="text-clay">📣 calling · {courtName(m.courtId)}</span>
+                ) : (
+                  <span className="text-court">● {courtName(m.courtId)}</span>
+                )
+              }
               right={
-                <Button variant="ball" size="sm" onClick={() => openFinish(m.id)}>
-                  ✓ Finish
-                </Button>
+                <div className="flex shrink-0 items-center gap-1">
+                  {m.status === 'called' ? (
+                    <Button variant="clay" size="sm" onClick={() => startPlay(m.id)}>
+                      ▶ Play
+                    </Button>
+                  ) : (
+                    <Button variant="ball" size="sm" onClick={() => openFinish(m.id)}>
+                      ✓ Finish
+                    </Button>
+                  )}
+                  <button
+                    onClick={() => openActions(m.id)}
+                    aria-label="Court options"
+                    className="grid h-10 w-8 place-items-center rounded-lg text-xl text-ink/50 hover:bg-ink/5"
+                  >
+                    ⋯
+                  </button>
+                </div>
               }
             />
           ))}
@@ -92,7 +116,7 @@ export function ScheduleScreen() {
       )}
 
       {queued.length > 0 && (
-        <Section title="Up next" count={queued.length} hint="Drag ⠿ to reorder">
+        <Section title="Up next" count={queued.length} hint="Drag ⠿ to reorder · Call sends to a court">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -125,6 +149,7 @@ export function ScheduleScreen() {
               <MatchCard
                 key={m.id}
                 match={m}
+                note={`${courtName(m.courtId) ?? ''} · ${fmtDur((m.finishedAt ?? 0) - (m.startedAt ?? 0))}`}
                 right={
                   <button className="text-xs font-semibold text-ink/40 hover:text-clay" onClick={() => reopen(m.id)}>
                     ↺ Reopen
@@ -186,11 +211,11 @@ function SortableMatch({ match, pos, blocked }: { match: Match; pos: number; blo
             <Button
               variant={blocked ? 'white' : 'ball'}
               size="sm"
-              className="w-12 px-0!"
-              aria-label={`Play match ${match.num}`}
+              className="w-14 px-0!"
+              aria-label={`Send match ${match.num} to a court`}
               onClick={() => openPlay(match.id)}
             >
-              ▶
+              Call
             </Button>
             <button
               ref={setActivatorNodeRef}

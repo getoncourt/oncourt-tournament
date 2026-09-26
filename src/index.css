@@ -80,13 +80,21 @@ body {
     linear-gradient(90deg, transparent calc(50% - 1.5px), rgba(255,255,255,.55) calc(50% - 1.5px), rgba(255,255,255,.55) calc(50% + 1.5px), transparent calc(50% + 1.5px)),
     linear-gradient(0deg, transparent 14%, rgba(255,255,255,.35) 14%, rgba(255,255,255,.35) calc(14% + 2px), transparent calc(14% + 2px), transparent calc(86% - 2px), rgba(255,255,255,.35) calc(86% - 2px), rgba(255,255,255,.35) 86%, transparent 86%);
 }
+/* court waiting for players: dimmed with moving caution stripes */
+.calling-overlay {
+  background: repeating-linear-gradient(135deg, rgba(19,35,58,.55) 0 16px, rgba(226,112,58,.45) 16px 32px);
+  background-size: 45px 45px;
+  animation: stripes 1.6s linear infinite;
+}
+@keyframes stripes { to { background-position: 45px 0; } }
+
 .court-empty {
   background-color: var(--color-court-light);
   background-image: repeating-linear-gradient(135deg, transparent 0 14px, rgba(31,122,74,.07) 14px 28px);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pop, .sheet-in, .fade-in, .live-dot { animation: none; }
+  .pop, .sheet-in, .fade-in, .live-dot, .calling-overlay { animation: none; }
 }
 
 .pb-safe { padding-bottom: env(safe-area-inset-bottom); }

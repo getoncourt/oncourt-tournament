@@ -13,10 +13,14 @@ pnpm build
 ## What you can do
 
 - **Players** – add players (Enter, or paste a list), drag / tap players into groups, auto-split into N groups (snake seeding), generate a round-robin.
-- **Schedule** – full match order. Drag ⠿ to reorder, filter by group, ▶ to start on a court (only free courts are offered), reopen finished matches.
-- **Courts** – set court count, “Fill free courts”, drag a queued match onto a free court or tap “Start #N” on it, ✓ Finish → pick winner (+ optional score).
-  With **Auto next** on, finishing a match immediately starts the next eligible match on that court (skips matches whose player is still on another court). Undo in the toast.
-- **Standings** – W/L per group.
+- **Schedule** – full match order. Drag ⠿ to reorder, filter by group, **Call** sends a match to a court (only free courts are offered), reopen finished matches.
+- **Courts** – match lifecycle: `queued → calling (on court, players being called) → live → done`.
+  - Put a match on a court: drag it, tap **Call #N** on a free court, **Call** in the queue, or **⚡ Fill free courts**. The court shows a “calling” timer.
+  - **▶ Players ready · Play** starts the match; **✓ Finish** → pick winner (+ optional score).
+  - **⋯** on a court: move to another court, “not started yet” (live → calling), or take it off court back to the queue. You can also drag a court’s match onto a free court to move it.
+  - Every court action shows a toast with **Undo**.
+  - **Auto next**: finishing a match calls the next eligible match to that court (skips matches with a player already on court).
+- **Standings** – per group: progress, avg call→start wait, avg match length, table (P/W/L/left), head-to-head grid, and match history (court, times, wait, duration, score) plus upcoming matches.
 
 State lives in `localStorage`; use “Reset demo” / “Start blank” in the menu.
 

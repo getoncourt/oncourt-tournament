@@ -14,7 +14,6 @@ export function FinishSheet() {
   const court = useStore((s) => s.courts.find((c) => c.id === match?.courtId))
   const autoAssign = useStore((s) => s.autoAssign)
   const finishMatch = useStore((s) => s.finishMatch)
-  const cancelMatch = useStore((s) => s.cancelMatch)
   const players = usePlayerMap()
   const [winner, setWinner] = useState<string | null>(null)
   const [score, setScore] = useState('')
@@ -86,16 +85,7 @@ export function FinishSheet() {
           <Button variant="ball" size="lg" className="w-full" disabled={!winner} onClick={finish}>
             ✓ Finish match
           </Button>
-          {autoAssign && <p className="-mt-2 text-center text-xs text-ink/50">Next match will auto-start on this court</p>}
-          <button
-            className="w-full py-1 text-sm font-medium text-ink/50 underline-offset-2 hover:underline"
-            onClick={() => {
-              cancelMatch(match.id)
-              close()
-            }}
-          >
-            Stop & send back to queue
-          </button>
+          {autoAssign && <p className="-mt-2 text-center text-xs text-ink/50">Next match will be called to this court</p>}
         </div>
       )}
     </Sheet>

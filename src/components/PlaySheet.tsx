@@ -5,28 +5,33 @@ import { Sheet } from './Sheet'
 import { Button } from './Button'
 import { MatchCard } from './MatchCard'
 
-/** Pick a free court for a queued match. Only free courts are offered. */
+/**
+ * Pick a free court. Queued match → call it to that court.
+ * Match already on court → move it there. Only free courts are offered.
+ */
 export function PlaySheet() {
   const id = useUi((s) => s.playId)
   const close = () => useUi.getState().openPlay(null)
   const matches = useStore((s) => s.matches)
   const courts = useStore((s) => s.courts)
-  const startMatch = useStore((s) => s.startMatch)
-  const showToast = useStore((s) => s.showToast)
+  const callMatch = useStore((s) => s.callMatch)
+  const moveToCourt = useStore((s) => s.moveToCourt)
   const players = usePlayerMap()
   const match = matches.find((m) => m.id === id)
+  const moving = !!match && match.status !== 'queued'
   const free = freeCourts(courts, matches)
   const busy = busyPlayerIds(matches)
-  const onCourt = match ? [match.p1, match.p2].filter((p) => busy.has(p)) : []
+  const blockers = match && !moving ? [match.p1, match.p2].filter((p) => busy.has(p)) : []
+  const currentCourt = courts.find((c) => c.id === match?.courtId)
 
   return (
-    <Sheet open={!!match} onClose={close} title="Start match on…">
+    <Sheet open={!!match} onClose={close} title={moving ? `Move from ${currentCourt?.name ?? 'court'} to…` : 'Send to court…'}>
       {match && (
         <div className="space-y-4">
           <MatchCard match={match} />
-          {onCourt.length > 0 && (
+          {blockers.length > 0 && (
             <div className="rounded-xl bg-clay/15 px-3 py-2 text-sm font-medium text-clay-dark">
-              ⚠️ {onCourt.map((p) => players.get(p)?.name).join(' & ')} {onCourt.length > 1 ? 'are' : 'is'} playing right now
+              ⚠️ {blockers.map((p) => players.get(p)?.name).join(' & ')} {blockers.length > 1 ? 'are' : 'is'} on court right now
             </div>
           )}
           {free.length === 0 ? (
@@ -43,19 +48,20 @@ export function PlaySheet() {
                   variant="court"
                   size="lg"
                   className="h-20! flex-col gap-0!"
-                  disabled={onCourt.length > 0}
+                  disabled={blockers.length > 0}
                   onClick={() => {
-                    startMatch(match.id, c.id)
-                    showToast(`Match #${match.num} started on ${c.name}`)
+                    if (moving) moveToCourt(match.id, c.id)
+                    else callMatch(match.id, c.id)
                     close()
                   }}
                 >
-                  <span className="text-xs font-medium opacity-80">▶ Play on</span>
+                  <span className="text-xs font-medium opacity-80">{moving ? '⇄ Move to' : '📣 Call to'}</span>
                   {c.name}
                 </Button>
               ))}
             </div>
           )}
+          {!moving && <p className="text-center text-xs text-ink/50">Match starts when you tap ▶ Play on the court.</p>}
         </div>
       )}
     </Sheet>
