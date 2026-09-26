@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import type { Match } from '../types'
 import { useGroupMap, usePlayerMap } from '../store'
 
@@ -8,9 +8,13 @@ type Props = {
   dim?: boolean
   note?: ReactNode
   className?: string
+  style?: CSSProperties
 }
 
-export function MatchCard({ match, right, dim, note, className = '' }: Props) {
+/** Tint a group color toward white for soft backgrounds. */
+export const tint = (color: string | undefined, pct: number) => `color-mix(in srgb, ${color ?? '#999'} ${pct}%, white)`
+
+export function MatchCard({ match, right, dim, note, className = '', style }: Props) {
   const players = usePlayerMap()
   const group = useGroupMap().get(match.groupId)
   const p1 = players.get(match.p1)?.name ?? '?'
@@ -19,14 +23,21 @@ export function MatchCard({ match, right, dim, note, className = '' }: Props) {
   const win = (id: string) => (done && match.winnerId === id ? 'font-bold text-ink-strong' : done ? 'text-subtle' : 'font-bold text-ink-strong')
 
   return (
-    <div className={`card-sm flex items-center gap-3 px-3 py-2.5 ${dim ? 'opacity-50' : ''} ${className}`}>
-      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface-muted text-sm font-bold text-muted tabular-nums">
+    <div
+      className={`card-sm group/card flex items-center gap-3 px-3 py-2.5 transition-[opacity,transform,box-shadow] duration-200 ${dim ? 'opacity-50' : ''} ${className}`}
+      style={style}
+    >
+      <div
+        className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-sm font-black tabular-nums"
+        style={{ background: tint(group?.color, 14), color: group?.color }}
+      >
         {match.num}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5 text-xs leading-4 font-bold">
-          <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: group?.color ?? '#999' }} />
-          <span className="truncate text-muted">{group?.name ?? 'No group'}</span>
+          <span className="truncate" style={{ color: group?.color }}>
+            {group?.name ?? 'No group'}
+          </span>
           {note && <span className="truncate font-bold text-muted">· {note}</span>}
         </div>
         <div className="truncate text-[15px] leading-6">

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { DndContext, DragOverlay, closestCenter, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -20,6 +21,10 @@ import type { Match } from '../types'
 import { MatchCard } from '../components/MatchCard'
 import { Button } from '../components/Button'
 import { useDndSensors } from '../components/dnd'
+import { Num } from '../components/Num'
+import { PageHero } from '../components/PageHero'
+
+const OUT = [0.23, 1, 0.32, 1] as const
 
 export function ScheduleScreen() {
   const matches = useStore((s) => s.matches)
@@ -58,17 +63,14 @@ export function ScheduleScreen() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl leading-8 font-bold text-ink-strong">Schedule</h1>
-          <p className="text-sm text-muted">
-            {matches.length} matches · {matches.filter((m) => m.status === 'done').length} done
-          </p>
-        </div>
+      <PageHero
+        title="Schedule"
+        sub={`${matches.length} matches · ${matches.filter((m) => m.status === 'done').length} done`}
+      >
         <Button variant={matches.length ? 'secondary' : 'primary'} size="sm" onClick={onGenerate}>
           <IconRefresh size={16} /> {matches.length ? 'Rebuild' : 'Generate'}
         </Button>
-      </div>
+      </PageHero>
 
       {groups.length > 1 && (
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
@@ -88,10 +90,18 @@ export function ScheduleScreen() {
       )}
 
       {live.length > 0 && (
-        <Section title="On court" count={live.length}>
+        <Section title="On court" count={live.length} tone="bg-lime-soft text-lime-900">
+          <AnimatePresence initial={false} mode="popLayout">
           {live.map((m) => (
+            <motion.div
+              key={m.id + m.status}
+              layout
+              initial={{ opacity: 0, transform: 'scale(0.97)', filter: 'blur(4px)' }}
+              animate={{ opacity: 1, transform: 'scale(1)', filter: 'blur(0px)' }}
+              exit={{ opacity: 0, transform: 'scale(0.96)', transition: { duration: 0.16 } }}
+              transition={{ duration: 0.26, ease: OUT }}
+            >
             <MatchCard
-              key={m.id}
               match={m}
               note={
                 m.status === 'called' ? (
@@ -121,12 +131,14 @@ export function ScheduleScreen() {
                 </div>
               }
             />
+            </motion.div>
           ))}
+          </AnimatePresence>
         </Section>
       )}
 
       {queued.length > 0 && (
-        <Section title="Up next" count={queued.length} hint="Drag to reorder">
+        <Section title="Up next" count={queued.length} hint="Drag to reorder" tone="bg-blue-soft text-blue">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -136,7 +148,7 @@ export function ScheduleScreen() {
           >
             <SortableContext items={queued.map((m) => m.id)} strategy={verticalListSortingStrategy}>
               {queued.map((m, i) => (
-                <SortableMatch key={m.id} match={m} pos={i + 1} blocked={!isPlayable(m, busy)} />
+                <SortableMatch key={m.id} match={m} pos={i + 1} blocked={!isPlayable(m, busy)} i={Math.min(i, 10)} />
               ))}
             </SortableContext>
             <DragOverlay>
@@ -152,7 +164,10 @@ export function ScheduleScreen() {
         <section className="space-y-2.5">
           <button className="flex w-full items-center justify-between py-1" onClick={() => setShowDone((v) => !v)}>
             <h2 className="text-lg leading-6 font-bold text-ink-strong">
-              Finished <span className="text-subtle">{done.length}</span>
+              Finished{' '}
+              <span className="ml-1 rounded-full bg-indigo-soft px-2 align-middle text-xs leading-5 text-indigo">
+                <Num value={done.length} />
+              </span>
             </h2>
             <span className="flex items-center gap-1 text-sm font-bold text-primary">
               {showDone ? 'Hide' : 'Show'}
@@ -160,8 +175,10 @@ export function ScheduleScreen() {
             </span>
           </button>
           {showDone &&
-            done.map((m) => (
+            done.map((m, i) => (
               <MatchCard
+                className="enter"
+                style={{ '--i': Math.min(i, 10) } as CSSProperties}
                 key={m.id}
                 match={m}
                 note={`${courtName(m.courtId) ?? ''} · ${fmtDur((m.finishedAt ?? 0) - (m.startedAt ?? 0))}`}
@@ -178,12 +195,27 @@ export function ScheduleScreen() {
   )
 }
 
-function Section({ title, count, hint, children }: { title: string; count: number; hint?: string; children: React.ReactNode }) {
+function Section({
+  title,
+  count,
+  hint,
+  tone,
+  children,
+}: {
+  title: string
+  count: number
+  hint?: string
+  tone: string
+  children: React.ReactNode
+}) {
   return (
     <section className="space-y-2.5">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-lg leading-6 font-bold text-ink-strong">
-          {title} <span className="text-subtle">{count}</span>
+        <h2 className="flex items-center gap-2 text-lg leading-6 font-bold text-ink-strong">
+          {title}
+          <span className={`rounded-full px-2 text-xs leading-5 ${tone}`}>
+            <Num value={count} />
+          </span>
         </h2>
         {hint && <span className="text-xs text-muted">{hint}</span>}
       </div>
@@ -197,15 +229,22 @@ function FilterChip({ active, onClick, label, color }: { active: boolean; onClic
   return (
     <button
       onClick={onClick}
-      className={`btn h-9 shrink-0 px-4 text-sm whitespace-nowrap ${active ? 'btn-primary' : 'btn-secondary'}`}
+      className={`btn btn-secondary relative h-9 shrink-0 px-4 text-sm whitespace-nowrap ${active ? 'text-white!' : ''}`}
     >
-      {color && <span className="h-2 w-2 rounded-full" style={{ background: color }} />}
-      {label}
+      {active && (
+        <motion.span
+          layoutId="schedule-filter"
+          className="absolute inset-0 rounded-full bg-primary shadow-[0_4px_0_0_var(--color-primary-deep)]"
+          transition={{ type: 'spring', duration: 0.35, bounce: 0.15 }}
+        />
+      )}
+      {color && <span className="relative h-2 w-2 rounded-full ring-2 ring-white/70" style={{ background: color }} />}
+      <span className="relative">{label}</span>
     </button>
   )
 }
 
-function SortableMatch({ match, pos, blocked }: { match: Match; pos: number; blocked: boolean }) {
+function SortableMatch({ match, pos, blocked, i }: { match: Match; pos: number; blocked: boolean; i: number }) {
   const { setNodeRef, setActivatorNodeRef, listeners, attributes, transform, transition, isDragging } = useSortable({
     id: match.id,
   })
@@ -216,6 +255,7 @@ function SortableMatch({ match, pos, blocked }: { match: Match; pos: number; blo
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={isDragging ? 'opacity-30' : ''}
     >
+      <div className="enter" style={{ '--i': i } as CSSProperties}>
       <MatchCard
         match={match}
         dim={blocked}
@@ -242,6 +282,7 @@ function SortableMatch({ match, pos, blocked }: { match: Match; pos: number; blo
           </div>
         }
       />
+      </div>
     </div>
   )
 }

@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { DndContext, DragOverlay, useDraggable, useDroppable, type DragEndEvent } from '@dnd-kit/core'
+import type { CSSProperties } from 'react'
 import { IconArrowsShuffle, IconPlus, IconRefresh, IconTrash, IconUserPlus, IconX } from '@tabler/icons-react'
+import { PageHero } from '../components/PageHero'
+import { tint } from '../components/MatchCard'
 import { useStore } from '../store'
 import type { Group, Player } from '../types'
 import { Button } from '../components/Button'
@@ -50,23 +53,22 @@ export function PlayersScreen({ goSchedule }: { goSchedule: () => void }) {
       onDragEnd={onDragEnd}
     >
       <div className="mx-auto max-w-6xl space-y-5">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="text-2xl leading-8 font-bold text-ink-strong">Players</h1>
-            <p className="text-sm text-muted">
+        <PageHero
+          title="Players"
+          sub={
+            <>
               {players.length} players · {groups.length} groups · <span className="hidden md:inline">drag</span>
-              <span className="md:hidden">long-press</span> to move, tap to edit
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button size="sm" onClick={() => addGroup()}>
-              <IconPlus size={16} /> Group
-            </Button>
-            <Button size="sm" onClick={() => setSplitOpen(true)} disabled={!players.length}>
-              <IconArrowsShuffle size={16} /> Auto split
-            </Button>
-          </div>
-        </div>
+              <span className="md:hidden">long-press</span> to move
+            </>
+          }
+        >
+          <Button size="sm" onClick={() => addGroup()}>
+            <IconPlus size={16} /> Group
+          </Button>
+          <Button size="sm" onClick={() => setSplitOpen(true)} disabled={!players.length}>
+            <IconArrowsShuffle size={16} /> Auto split
+          </Button>
+        </PageHero>
 
         {/* Add players */}
         <div className="card flex flex-col gap-2 p-3 sm:flex-row sm:items-center">
@@ -106,8 +108,8 @@ export function PlayersScreen({ goSchedule }: { goSchedule: () => void }) {
 
         {/* Groups */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {groups.map((g) => (
-            <GroupCard key={g.id} group={g} players={players.filter((p) => p.groupId === g.id)} dragging={!!dragId} onTap={setEditId} />
+          {groups.map((g, i) => (
+            <GroupCard i={i} key={g.id} group={g} players={players.filter((p) => p.groupId === g.id)} dragging={!!dragId} onTap={setEditId} />
           ))}
           <button
             onClick={() => addGroup()}
@@ -136,7 +138,7 @@ export function PlayersScreen({ goSchedule }: { goSchedule: () => void }) {
       </div>
 
       <DragOverlay dropAnimation={null}>
-        {dragId && <Chip name={players.find((p) => p.id === dragId)?.name ?? ''} className="shadow-[0_4px_16px_rgba(0,0,0,.15)]!" />}
+        {dragId && <Chip name={players.find((p) => p.id === dragId)?.name ?? ''} className="scale-110 rotate-2 shadow-[0_12px_28px_rgba(4,32,31,.22)]!" />}
       </DragOverlay>
 
       <EditPlayerSheet id={editId} onClose={() => setEditId(null)} />
@@ -183,7 +185,7 @@ function DropZone({ id, dragging, children }: { id: string; dragging: boolean; c
   )
 }
 
-function GroupCard({ group, players, dragging, onTap }: { group: Group; players: Player[]; dragging: boolean; onTap: (id: string) => void }) {
+function GroupCard({ group, players, dragging, onTap, i }: { group: Group; players: Player[]; dragging: boolean; onTap: (id: string) => void; i: number }) {
   const { setNodeRef, isOver } = useDroppable({ id: group.id })
   const renameGroup = useStore((s) => s.renameGroup)
   const removeGroup = useStore((s) => s.removeGroup)
@@ -191,11 +193,15 @@ function GroupCard({ group, players, dragging, onTap }: { group: Group; players:
   return (
     <div
       ref={setNodeRef}
-      className={`card overflow-hidden transition-shadow ${
+      style={{ '--i': i } as CSSProperties}
+      className={`card enter overflow-hidden transition-[box-shadow,transform] duration-200 ease-[var(--ease-out)] ${isOver ? 'scale-[1.02]' : ''} ${
         isOver ? 'shadow-[inset_0_0_0_2px_var(--color-lime),0_4px_0_0_var(--color-line)]!' : dragging ? 'shadow-[inset_0_0_0_2px_var(--color-primary-200),0_4px_0_0_var(--color-line)]!' : ''
       }`}
     >
-      <div className="flex items-center gap-2 px-4 py-2.5 text-white" style={{ background: group.color }}>
+      <div
+        className="flex items-center gap-2 px-4 py-2.5 text-white"
+        style={{ background: group.color }}
+      >
         <input
           value={group.name}
           onChange={(e) => renameGroup(group.id, e.target.value)}
@@ -211,7 +217,7 @@ function GroupCard({ group, players, dragging, onTap }: { group: Group; players:
           <IconX size={16} />
         </button>
       </div>
-      <div className={`min-h-24 p-3 ${isOver ? 'bg-lime-soft/60' : ''}`}>
+      <div className="min-h-24 p-3 transition-colors duration-200" style={{ background: isOver ? 'var(--color-lime-soft)' : tint(group.color, 6) }}>
         {players.length ? (
           <div className="flex flex-wrap gap-2">
             {players.map((p) => (
@@ -230,11 +236,17 @@ function GroupCard({ group, players, dragging, onTap }: { group: Group; players:
 }
 
 /** DS Chip: pill, white with lifted ledge. */
-function Chip({ name, className = '' }: { name: string; className?: string }) {
+function Chip({ name, color, className = '' }: { name: string; color?: string; className?: string }) {
   return (
     <span
-      className={`inline-flex h-9 items-center rounded-full bg-white px-3.5 text-sm font-bold text-ink-strong shadow-[inset_0_0_0_1px_var(--color-line-strong),0_2px_0_0_var(--color-line-strong)] ${className}`}
+      className={`inline-flex h-9 items-center gap-2 rounded-full bg-white pr-3.5 pl-1.5 text-sm font-bold text-ink-strong shadow-[inset_0_0_0_1px_var(--color-line-strong),0_2px_0_0_var(--color-line-strong)] ${className}`}
     >
+      <span
+        className="grid h-6 w-6 place-items-center rounded-full text-[10px] font-black"
+        style={{ background: tint(color ?? 'rgb(142,149,147)', 18), color: color ?? 'rgb(107,112,111)' }}
+      >
+        {name.trim().slice(0, 1).toUpperCase()}
+      </span>
       {name}
     </span>
   )
@@ -242,9 +254,16 @@ function Chip({ name, className = '' }: { name: string; className?: string }) {
 
 function PlayerChip({ player, onTap }: { player: Player; onTap: () => void }) {
   const { setNodeRef, listeners, attributes, isDragging } = useDraggable({ id: player.id })
+  const color = useStore((s) => s.groups.find((g) => g.id === player.groupId)?.color)
   return (
-    <button ref={setNodeRef} {...listeners} {...attributes} onClick={onTap} className={`cursor-grab ${isDragging ? 'opacity-30' : ''}`}>
-      <Chip name={player.name} />
+    <button
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      onClick={onTap}
+      className={`press swap-in cursor-grab transition-opacity ${isDragging ? 'opacity-30' : ''}`}
+    >
+      <Chip name={player.name} color={color} />
     </button>
   )
 }

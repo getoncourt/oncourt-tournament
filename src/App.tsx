@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { IconBallTennis, IconDotsVertical, IconLayoutList, IconRefresh, IconTrash, IconTrophy, IconUsers, type Icon } from '@tabler/icons-react'
+import { motion } from 'motion/react'
 import { useStore } from './store'
+import { Num } from './components/Num'
 import { CourtsScreen } from './screens/CourtsScreen'
 import { ScheduleScreen } from './screens/ScheduleScreen'
 import { PlayersScreen } from './screens/PlayersScreen'
@@ -60,13 +62,24 @@ export default function App() {
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`flex h-11 items-center gap-3 rounded-full px-4 text-[15px] font-bold transition-colors ${
-                  active ? 'bg-lime-bright text-primary-900' : 'text-primary-200 hover:bg-white/10 hover:text-white'
+                className={`press relative flex h-11 items-center gap-3 rounded-full px-4 text-[15px] font-bold transition-colors duration-200 ${
+                  active ? 'text-primary-900' : 'text-primary-200 hover:bg-white/5 hover:text-white'
                 }`}
               >
-                <t.icon size={20} stroke={2} />
-                <span className="flex-1 text-left">{t.label}</span>
-                {badge(t.id) > 0 && <Badge n={badge(t.id)} active={active} />}
+                {active && (
+                  <motion.span
+                    layoutId="nav-pill-desktop"
+                    className="absolute inset-0 rounded-full bg-lime-bright shadow-[0_3px_0_0_rgb(127,163,36)]"
+                    transition={{ type: 'spring', duration: 0.4, bounce: 0.15 }}
+                  />
+                )}
+                <t.icon size={20} stroke={2} className="relative" />
+                <span className="relative flex-1 text-left">{t.label}</span>
+                {badge(t.id) > 0 && (
+                  <span className="relative">
+                    <Badge n={badge(t.id)} active={active} />
+                  </span>
+                )}
               </button>
             )
           })}
@@ -90,7 +103,7 @@ export default function App() {
           </details>
         </header>
 
-        <main className="px-4 pt-2 pb-32 md:p-8 md:pb-10">
+        <main key={tab} className="enter px-4 pt-2 pb-32 md:p-8 md:pb-10">
           {tab === 'courts' && <CourtsScreen goSchedule={() => setTab('schedule')} />}
           {tab === 'schedule' && <ScheduleScreen />}
           {tab === 'players' && <PlayersScreen goSchedule={() => setTab('schedule')} />}
@@ -107,12 +120,23 @@ export default function App() {
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`relative flex h-14 flex-col items-center justify-center gap-0.5 rounded-[22px] text-[11px] font-bold transition-colors ${
-                  active ? 'bg-lime-bright text-primary-900' : 'text-primary-200'
+                className={`press relative flex h-14 flex-col items-center justify-center gap-0.5 rounded-[22px] text-[11px] font-bold transition-colors duration-200 ${
+                  active ? 'text-primary-900' : 'text-primary-200'
                 }`}
               >
-                <t.icon size={22} stroke={2} />
-                {t.label}
+                {active && (
+                  <motion.span
+                    layoutId="nav-pill-mobile"
+                    className="absolute inset-0 rounded-[22px] bg-lime-bright"
+                    transition={{ type: 'spring', duration: 0.4, bounce: 0.15 }}
+                  />
+                )}
+                <t.icon
+                  size={22}
+                  stroke={2}
+                  className={`relative transition-transform duration-300 ease-[var(--ease-out)] ${active ? '-translate-y-px scale-110' : ''}`}
+                />
+                <span className="relative">{t.label}</span>
                 {badge(t.id) > 0 && (
                   <span className="absolute top-1 right-2">
                     <Badge n={badge(t.id)} active={active} />
@@ -139,7 +163,7 @@ function Badge({ n, active }: { n: number; active: boolean }) {
         active ? 'bg-primary-deep text-lime-bright' : 'bg-white/15 text-white'
       }`}
     >
-      {n}
+      <Num value={n} />
     </span>
   )
 }

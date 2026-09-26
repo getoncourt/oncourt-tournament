@@ -46,11 +46,12 @@ export function PlaySheet() {
             <>
               <div className="text-xs font-bold tracking-[0.01em] text-muted uppercase">Available courts</div>
               <div className="grid grid-cols-2 gap-3">
-                {free.map((c) => (
+                {free.map((c, i) => (
                   <button
                     key={c.id}
+                    style={{ '--i': i } as React.CSSProperties}
                     disabled={blockers.length > 0}
-                    className="btn btn-secondary h-18 flex-col gap-0.5 rounded-[20px]! hover:bg-primary-50"
+                    className="btn btn-secondary enter h-18 flex-col gap-0.5 rounded-[20px]! hover:bg-lime-soft"
                     onClick={() => {
                       if (moving) moveToCourt(match.id, c.id)
                       else callMatch(match.id, c.id)

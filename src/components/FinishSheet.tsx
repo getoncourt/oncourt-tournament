@@ -44,12 +44,16 @@ export function FinishSheet() {
                   <button
                     key={pid}
                     onClick={() => setWinner(pid)}
-                    className={`btn h-24 flex-col gap-1.5 rounded-[20px]! px-3 text-base leading-tight ${
+                    className={`btn h-24 flex-col gap-1.5 rounded-[20px]! px-3 text-base leading-tight transition-[background-color,color,box-shadow,transform] duration-200 ${
                       selected ? 'btn-primary' : 'btn-secondary'
                     }`}
                     aria-pressed={selected}
                   >
-                    <IconTrophy size={22} className={selected ? 'text-lime-bright' : 'text-subtle'} />
+                    <IconTrophy
+                      key={String(selected)}
+                      size={22}
+                      className={selected ? 'swap-in text-lime-bright' : 'text-subtle'}
+                    />
                     <span className="line-clamp-2">{players.get(pid)?.name}</span>
                   </button>
                 )
@@ -73,7 +77,7 @@ export function FinishSheet() {
                 <button
                   key={s}
                   onClick={() => setScore((cur) => (cur ? `${cur} ${s}` : s))}
-                  className="rounded-full bg-surface-muted px-3 py-1 text-sm font-bold text-ink tabular-nums hover:bg-primary-100"
+                  className="press rounded-full bg-surface-muted px-3 py-1 text-sm font-bold text-ink tabular-nums transition-colors hover:bg-lime-soft"
                 >
                   {s}
                 </button>

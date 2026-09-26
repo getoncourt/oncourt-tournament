@@ -1,5 +1,8 @@
-import { useState } from 'react'
-import { IconClock, IconCrown, IconSpeakerphone, IconTrophy } from '@tabler/icons-react'
+import { useState, type CSSProperties, type ReactNode } from 'react'
+import { motion } from 'motion/react'
+import { IconBallTennis, IconChartBar, IconClock, IconCrown, IconSpeakerphone, IconTrophy } from '@tabler/icons-react'
+import { PageHero } from '../components/PageHero'
+import { Num } from '../components/Num'
 import { useStore } from '../store'
 import { fmtClock, fmtDur } from '../logic/time'
 import type { Group, Match, Player } from '../types'
@@ -13,7 +16,7 @@ export function StandingsScreen() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-4">
-      <h1 className="text-2xl leading-8 font-bold text-ink-strong">Standings</h1>
+      <PageHero title="Standings" sub={`${groups.length} groups`} />
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
         {groups.map((g) => {
           const active = g.id === group.id
@@ -21,10 +24,18 @@ export function StandingsScreen() {
             <button
               key={g.id}
               onClick={() => setSel(g.id)}
-              className={`btn h-9 shrink-0 px-4 text-sm whitespace-nowrap ${active ? 'btn-primary' : 'btn-secondary'}`}
+              className={`btn btn-secondary relative h-9 shrink-0 px-4 text-sm whitespace-nowrap ${active ? 'text-white!' : ''}`}
             >
-              <span className="h-2 w-2 rounded-full" style={{ background: g.color }} />
-              {g.name}
+              {active && (
+                <motion.span
+                  layoutId="standings-tab"
+                  className="absolute inset-0 rounded-full"
+                  style={{ background: g.color, boxShadow: `0 4px 0 0 color-mix(in srgb, ${g.color} 65%, black)` }}
+                  transition={{ type: 'spring', duration: 0.35, bounce: 0.15 }}
+                />
+              )}
+              <span className="relative h-2 w-2 rounded-full ring-2 ring-white/70" style={{ background: g.color }} />
+              <span className="relative">{g.name}</span>
             </button>
           )
         })}
@@ -69,17 +80,20 @@ function GroupDetail({ group }: { group: Group }) {
     <div className="space-y-4">
       {/* Summary */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Tile label="Progress" value={`${done.length}/${gm.length}`}>
+        <Tile i={0} label="Progress" value={`${done.length}/${gm.length}`} icon={<IconChartBar size={16} />} tone="bg-lime-soft text-lime-ink">
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted">
-            <div className="h-full rounded-full bg-lime transition-all" style={{ width: `${pct}%` }} />
+            <div
+              className="h-full origin-left rounded-full bg-lime transition-transform duration-700 ease-[var(--ease-out)]"
+              style={{ transform: `scaleX(${pct / 100})` }}
+            />
           </div>
         </Tile>
-        <Tile label="On court" value={String(onCourt.length)} />
-        <Tile label="Avg wait to start" value={fmtDur(avg(waits))} />
-        <Tile label="Avg match" value={fmtDur(avg(durs))} />
+        <Tile i={1} label="On court" value={String(onCourt.length)} icon={<IconBallTennis size={16} />} tone="bg-yellow-soft text-yellow-ink" />
+        <Tile i={2} label="Avg wait" value={fmtDur(avg(waits))} icon={<IconSpeakerphone size={16} />} tone="bg-blue-soft text-blue" />
+        <Tile i={3} label="Avg match" value={fmtDur(avg(durs))} icon={<IconClock size={16} />} tone="bg-indigo-soft text-indigo" />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="enter grid gap-4 lg:grid-cols-2" style={{ '--i': 4 } as CSSProperties}>
         {/* Table */}
         <div className="card overflow-hidden">
           <Header color={group.color}>Table</Header>
@@ -96,7 +110,7 @@ function GroupDetail({ group }: { group: Group }) {
             </thead>
             <tbody>
               {rows.map((r, i) => (
-                <tr key={r.p.id} className="border-t border-line">
+                <tr key={r.p.id} className="enter border-t border-line" style={{ '--i': i + 5 } as CSSProperties}>
                   <td className="py-2.5 pl-4 font-bold text-subtle tabular-nums">{i === 0 && r.w > 0 ? <IconCrown size={18} className="text-lime-ink" /> : i + 1}</td>
                   <td className="truncate font-bold text-ink-strong">{r.p.name}</td>
                   <td className="text-center text-muted tabular-nums">{r.played}</td>
@@ -156,18 +170,39 @@ function GroupDetail({ group }: { group: Group }) {
 
 function Header({ color, children }: { color: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2 bg-primary px-4 py-2.5 text-base font-bold text-white">
-      <span className="h-2.5 w-2.5 rounded-full ring-2 ring-white/70" style={{ background: color }} />
+    <div
+      className="flex items-center gap-2 px-4 py-2.5 text-base font-bold text-white"
+      style={{ background: color }}
+    >
       {children}
     </div>
   )
 }
 
-function Tile({ label, value, children }: { label: string; value: string; children?: React.ReactNode }) {
+function Tile({
+  label,
+  value,
+  icon,
+  tone,
+  i,
+  children,
+}: {
+  label: string
+  value: string
+  icon: ReactNode
+  tone: string
+  i: number
+  children?: ReactNode
+}) {
   return (
-    <div className="card px-4 py-3">
-      <div className="text-xs font-bold tracking-[0.01em] text-muted uppercase">{label}</div>
-      <div className="text-2xl leading-8 font-black text-ink-strong tabular-nums">{value}</div>
+    <div className="card enter px-4 py-3" style={{ '--i': i } as CSSProperties}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-xs font-bold tracking-[0.01em] text-muted uppercase">{label}</div>
+        <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${tone}`}>{icon}</span>
+      </div>
+      <div className="overflow-hidden text-2xl leading-8 font-black text-ink-strong">
+        <Num value={value} />
+      </div>
       {children}
     </div>
   )
@@ -177,7 +212,7 @@ function HistoryRow({ m, name, court }: { m: Match; name: (id: string) => string
   const done = m.status === 'done'
   const cls = (id: string) => (done ? (m.winnerId === id ? 'font-bold text-ink-strong' : 'text-subtle') : 'font-bold text-ink-strong')
   return (
-    <li className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5">
+    <li className="enter flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 transition-colors hover:bg-page">
       <span className="w-9 font-bold text-subtle">#{m.num}</span>
       <div className="min-w-0 flex-1">
         <div className="truncate">
@@ -233,10 +268,10 @@ function HeadToHead({ players, matches }: { players: Player[]; matches: Match[] 
         </tr>
       </thead>
       <tbody>
-        {players.map((row) => (
+        {players.map((row, ri) => (
           <tr key={row.id}>
             <th className="max-w-28 truncate pr-2 text-right font-bold text-ink-strong">{row.name}</th>
-            {players.map((col) => {
+            {players.map((col, ci) => {
               if (row.id === col.id) return <td key={col.id} className="h-10 rounded-lg bg-line" />
               const m = find(row.id, col.id)
               const won = m?.status === 'done' && m.winnerId === row.id
@@ -249,7 +284,12 @@ function HeadToHead({ players, matches }: { players: Player[]; matches: Match[] 
                     ? 'bg-primary-100 text-primary'
                     : 'bg-surface-muted text-subtle'
               return (
-                <td key={col.id} className={`h-10 rounded-lg font-bold ${cls}`} title={m?.score}>
+                <td
+                  key={col.id}
+                  className={`swap-in h-10 rounded-lg font-bold ${cls}`}
+                  style={{ animationDelay: `${(ri + ci) * 35}ms` }}
+                  title={m?.score}
+                >
                   {won ? 'W' : lost ? 'L' : m?.status === 'live' ? 'Live' : m?.status === 'called' ? <IconSpeakerphone size={14} className="mx-auto" /> : '·'}
                 </td>
               )
