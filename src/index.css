@@ -1,0 +1,92 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Fredoka', ui-rounded, system-ui, sans-serif;
+  --color-court: #1f7a4a;
+  --color-court-dark: #155c37;
+  --color-court-light: #e5f5ea;
+  --color-ball: #d7f205;
+  --color-ball-dark: #a9bf00;
+  --color-clay: #e2703a;
+  --color-clay-dark: #b8531f;
+  --color-ink: #13233a;
+  --color-mist: #f3f6ef;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--color-mist);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  overscroll-behavior-y: none;
+}
+
+/* chunky "game" button press */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-2xl border-[3px] border-ink px-4 font-semibold select-none transition-[transform,box-shadow] duration-75;
+  box-shadow: 0 4px 0 var(--color-ink);
+}
+.btn:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 var(--color-ink);
+}
+.btn:disabled {
+  @apply cursor-not-allowed opacity-40;
+}
+
+.card {
+  @apply rounded-2xl border-[3px] border-ink bg-white;
+  box-shadow: 0 4px 0 var(--color-ink);
+}
+
+@keyframes pop {
+  0% { transform: scale(0.85); opacity: 0; }
+  60% { transform: scale(1.04); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.pop { animation: pop 260ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.sheet-in { animation: slide-up 240ms cubic-bezier(0.2, 0.9, 0.3, 1) both; }
+.fade-in { animation: fade-in 180ms ease-out both; }
+@media (min-width: 768px) {
+  .sheet-in { animation: pop 220ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+}
+
+@keyframes live-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.7); }
+}
+.live-dot { animation: live-dot 1.2s ease-in-out infinite; }
+
+/* tennis court lines on court tiles */
+.court-lines {
+  background-color: var(--color-court);
+  background-image:
+    linear-gradient(90deg, transparent calc(50% - 1.5px), rgba(255,255,255,.55) calc(50% - 1.5px), rgba(255,255,255,.55) calc(50% + 1.5px), transparent calc(50% + 1.5px)),
+    linear-gradient(0deg, transparent 14%, rgba(255,255,255,.35) 14%, rgba(255,255,255,.35) calc(14% + 2px), transparent calc(14% + 2px), transparent calc(86% - 2px), rgba(255,255,255,.35) calc(86% - 2px), rgba(255,255,255,.35) 86%, transparent 86%);
+}
+.court-empty {
+  background-color: var(--color-court-light);
+  background-image: repeating-linear-gradient(135deg, transparent 0 14px, rgba(31,122,74,.07) 14px 28px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pop, .sheet-in, .fade-in, .live-dot { animation: none; }
+}
+
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
