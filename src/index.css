@@ -1,16 +1,60 @@
 @import 'tailwindcss';
 
+/*
+ * OnCourt Design System tokens (claude.ai/design "OnCourt Design System").
+ * Values mirror tokens/oncourt.css + fig-tokens.css core palettes.
+ */
 @theme {
-  --font-sans: 'Fredoka', ui-rounded, system-ui, sans-serif;
-  --color-court: #1f7a4a;
-  --color-court-dark: #155c37;
-  --color-court-light: #e5f5ea;
-  --color-ball: #d7f205;
-  --color-ball-dark: #a9bf00;
-  --color-clay: #e2703a;
-  --color-clay-dark: #b8531f;
-  --color-ink: #13233a;
-  --color-mist: #f3f6ef;
+  --font-sans: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Brand: deep teal */
+  --color-primary-50: rgb(237, 246, 246);
+  --color-primary-100: rgb(225, 239, 239);
+  --color-primary-200: rgb(186, 216, 215);
+  --color-primary-300: rgb(92, 149, 147);
+  --color-primary: rgb(11, 96, 93); /* deep-teal-500 */
+  --color-primary-strong: rgb(9, 80, 78); /* 600 */
+  --color-primary-deep: rgb(7, 64, 62); /* 700 */
+  --color-primary-900: rgb(4, 32, 31);
+
+  /* Accent: lime (tennis-ball) */
+  --color-lime-soft: rgb(227, 244, 186); /* lime-200 */
+  --color-lime: rgb(148, 196, 26); /* lime-700 */
+  --color-lime-bright: rgb(204, 255, 77); /* lime on dark */
+  --color-lime-ink: rgb(112, 153, 11); /* lime-800 */
+  --color-lime-900: rgb(57, 74, 16);
+
+  /* Neutrals (faintly green) */
+  --color-ink: rgb(43, 45, 44);
+  --color-ink-strong: rgb(26, 27, 27);
+  --color-muted: rgb(107, 112, 111);
+  --color-subtle: rgb(142, 149, 147);
+  --color-line: rgb(227, 234, 232);
+  --color-line-strong: rgb(220, 229, 227);
+  --color-page: rgb(247, 249, 248);
+  --color-surface-muted: rgb(240, 245, 244);
+
+  /* Semantic */
+  --color-success: rgb(46, 124, 14);
+  --color-danger: rgb(197, 25, 24);
+  --color-warning: rgb(254, 202, 0);
+  --color-mojo: rgb(197, 75, 59);
+  --color-mojo-soft: rgb(241, 210, 206);
+
+  /* Extra DS tag palettes for color-coding */
+  --color-blue: rgb(0, 136, 255);
+  --color-blue-soft: rgb(224, 240, 255);
+  --color-indigo: rgb(97, 85, 245);
+  --color-indigo-soft: rgb(233, 231, 254);
+  --color-yellow-soft: rgb(255, 244, 204);
+  --color-yellow-ink: rgb(150, 115, 0);
+  --color-globin: rgb(70, 131, 82);
+  --color-globin-soft: rgb(213, 232, 217);
+
+  /* Motion (custom curves; built-ins are too weak) */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 html,
@@ -20,7 +64,7 @@ body,
 }
 
 body {
-  background: var(--color-mist);
+  background: var(--color-page);
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-tap-highlight-color: transparent;
@@ -28,73 +72,133 @@ body {
   overscroll-behavior-y: none;
 }
 
-/* chunky "game" button press */
+/* ── Buttons: pill, hard "ledge" underneath that collapses on press ── */
 .btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-2xl border-[3px] border-ink px-4 font-semibold select-none transition-[transform,box-shadow] duration-75;
-  box-shadow: 0 4px 0 var(--color-ink);
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-5 font-bold select-none;
+  --ledge: var(--color-line);
+  box-shadow: 0 4px 0 0 var(--ledge);
+  transition:
+    transform 160ms var(--ease-out),
+    box-shadow 160ms var(--ease-out),
+    background-color 150ms ease,
+    color 150ms ease;
 }
+/* Press: ledge collapses + slight scale so the UI feels like it heard you */
 .btn:active:not(:disabled) {
-  transform: translateY(4px);
-  box-shadow: 0 0 0 var(--color-ink);
+  transform: translateY(3px) scale(0.98);
+  box-shadow: 0 1px 0 0 var(--ledge);
 }
+.press { transition: transform 160ms var(--ease-out); }
+.press:active { transform: scale(0.97); }
 .btn:disabled {
-  @apply cursor-not-allowed opacity-40;
+  @apply cursor-not-allowed bg-line-strong! text-subtle! shadow-none!;
 }
+.btn-primary {
+  @apply bg-primary text-white;
+  --ledge: var(--color-primary-deep);
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover:not(:disabled) { @apply bg-primary-strong; }
+}
+.btn-secondary {
+  @apply bg-white text-ink hover:bg-surface-muted;
+  box-shadow: inset 0 0 0 1px var(--color-line), 0 4px 0 0 var(--color-line);
+}
+.btn-secondary:active:not(:disabled) { box-shadow: inset 0 0 0 1px var(--color-line), 0 1px 0 0 var(--color-line); }
+.btn-lime { @apply bg-lime-bright text-primary-900 hover:bg-[rgb(186,240,60)]; --ledge: rgb(127, 163, 36); }
+.btn-warning { @apply bg-warning text-ink-strong hover:bg-[rgb(240,190,0)]; --ledge: rgb(191, 150, 0); }
+.btn-ghost { @apply bg-transparent text-primary shadow-none! hover:bg-primary-50; }
 
+/* ── Cards: white, 1px line + 4px hard bottom ledge, no blur ── */
 .card {
-  @apply rounded-2xl border-[3px] border-ink bg-white;
-  box-shadow: 0 4px 0 var(--color-ink);
+  @apply rounded-[20px] bg-white;
+  box-shadow: inset 0 0 0 1px var(--color-line), 0 4px 0 0 var(--color-line);
+}
+.card-sm {
+  @apply rounded-2xl bg-white;
+  box-shadow: inset 0 0 0 1px var(--color-line), 0 2px 0 0 var(--color-line);
 }
 
-@keyframes pop {
-  0% { transform: scale(0.85); opacity: 0; }
-  60% { transform: scale(1.04); opacity: 1; }
-  100% { transform: scale(1); }
+/* ── Tags ── */
+.tag {
+  @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs leading-4 font-bold whitespace-nowrap;
 }
-.pop { animation: pop 260ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
 
-@keyframes slide-up {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+/* ── Motion ── entries ease-out, ≤300ms; stagger via --i */
+@keyframes enter {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to { opacity: 1; transform: none; }
 }
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.enter { animation: enter 260ms var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 40ms); }
+
+/* crossfade with blur for state swaps (e.g. court free → calling → live) */
+@keyframes swap-in {
+  from { opacity: 0; transform: scale(0.97); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
 }
-.sheet-in { animation: slide-up 240ms cubic-bezier(0.2, 0.9, 0.3, 1) both; }
-.fade-in { animation: fade-in 180ms ease-out both; }
-@media (min-width: 768px) {
-  .sheet-in { animation: pop 220ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+.swap-in { animation: swap-in 280ms var(--ease-out) backwards; }
+
+/* number tick when a stat changes */
+@keyframes tick {
+  from { opacity: 0; transform: translateY(40%); filter: blur(2px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
 }
+.tick { display: inline-block; animation: tick 240ms var(--ease-out) backwards; }
+
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.fade-in { animation: fade-in 200ms ease-out both; }
 
 @keyframes live-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.35; transform: scale(0.7); }
+  50% { opacity: 0.35; transform: scale(0.75); }
 }
 .live-dot { animation: live-dot 1.2s ease-in-out infinite; }
 
-/* tennis court lines on court tiles */
+/* expanding ring: court just got a new match / attention needed */
+@keyframes ring {
+  from { opacity: 0.7; transform: scale(0.9); }
+  to { opacity: 0; transform: scale(1.08); }
+}
+.ring-once::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 3px var(--ring, var(--color-lime-bright));
+  animation: ring 700ms var(--ease-out) both;
+  pointer-events: none;
+}
+/* megaphone nudge on calling courts */
+@keyframes wiggle {
+  0%, 60%, 100% { transform: rotate(0deg); }
+  70% { transform: rotate(-14deg); }
+  80% { transform: rotate(10deg); }
+  90% { transform: rotate(-6deg); }
+}
+
+/* Court surfaces: flat fills, court lines as the only texture */
 .court-lines {
-  background-color: var(--color-court);
-  background-image:
-    linear-gradient(90deg, transparent calc(50% - 1.5px), rgba(255,255,255,.55) calc(50% - 1.5px), rgba(255,255,255,.55) calc(50% + 1.5px), transparent calc(50% + 1.5px)),
-    linear-gradient(0deg, transparent 14%, rgba(255,255,255,.35) 14%, rgba(255,255,255,.35) calc(14% + 2px), transparent calc(14% + 2px), transparent calc(86% - 2px), rgba(255,255,255,.35) calc(86% - 2px), rgba(255,255,255,.35) 86%, transparent 86%);
+  background-color: var(--color-primary);
+  background-image: linear-gradient(0deg, transparent 14%, rgba(255,255,255,.18) 14%, rgba(255,255,255,.18) calc(14% + 2px), transparent calc(14% + 2px), transparent calc(86% - 2px), rgba(255,255,255,.18) calc(86% - 2px), rgba(255,255,255,.18) 86%, transparent 86%);
+  box-shadow: 0 4px 0 0 var(--color-primary-deep);
 }
-/* court waiting for players: dimmed with moving caution stripes */
-.calling-overlay {
-  background: repeating-linear-gradient(135deg, rgba(19,35,58,.55) 0 16px, rgba(226,112,58,.45) 16px 32px);
-  background-size: 45px 45px;
-  animation: stripes 1.6s linear infinite;
+.court-calling {
+  background-color: var(--color-primary-deep);
+  box-shadow: inset 0 0 0 2px var(--color-warning), 0 4px 0 0 var(--color-primary-900);
 }
-@keyframes stripes { to { background-position: 45px 0; } }
-
-.court-empty {
-  background-color: var(--color-court-light);
-  background-image: repeating-linear-gradient(135deg, transparent 0 14px, rgba(31,122,74,.07) 14px 28px);
+.court-free {
+  @apply bg-white;
+  background-image: radial-gradient(var(--color-line) 1px, transparent 1px);
+  background-size: 16px 16px;
+  box-shadow: inset 0 0 0 1px var(--color-line-strong), 0 4px 0 0 var(--color-line);
+  transition: box-shadow 180ms var(--ease-out), background-color 180ms ease, transform 180ms var(--ease-out);
 }
 
+/* Reduced motion: keep fades/colour, drop movement */
 @media (prefers-reduced-motion: reduce) {
-  .pop, .sheet-in, .fade-in, .live-dot, .calling-overlay { animation: none; }
+  .enter, .swap-in, .tick { animation: fade-in 150ms ease-out backwards; }
+  .live-dot, .ring-once::after, [class*='animate-[wiggle'] { animation: none; }
+  .btn:active:not(:disabled), .press:active { transform: none; }
 }
 
 .pb-safe { padding-bottom: env(safe-area-inset-bottom); }

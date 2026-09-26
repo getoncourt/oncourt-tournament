@@ -1,7 +1,7 @@
 import type { Court, Group, Match, Player } from '../types'
 import { interleaveGroups, roundRobinRounds } from './roundRobin'
 
-const COLORS = ['#3b82f6', '#f97316', '#a855f7', '#ec4899']
+const COLORS = ['rgb(0,136,255)', 'rgb(197,75,59)', 'rgb(97,85,245)', 'rgb(70,131,82)']
 
 const SEED: Record<string, string[]> = {
   "Men's A": ['Carlos A.', 'Jannik S.', 'Novak D.', 'Daniil M.'],

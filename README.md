@@ -24,4 +24,6 @@ pnpm build
 
 State lives in `localStorage`; use “Reset demo” / “Start blank” in the menu.
 
-Stack: Vite, React, TypeScript, Tailwind v4, Zustand (persist), dnd-kit, canvas-confetti.
+Stack: Vite, React, TypeScript, Tailwind v4, Zustand (persist), dnd-kit, Tabler icons.
+
+Styling follows the **OnCourt Design System** (claude.ai/design): tokens live in `src/index.css` (`@theme`), Lato type, deep-teal primary, lime accent, pill buttons and "lifted ledge" cards, Tabler icons, no emoji.
