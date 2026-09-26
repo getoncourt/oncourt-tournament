@@ -2,6 +2,16 @@ import { useState } from 'react'
 import { DndContext, DragOverlay, closestCenter, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import {
+  IconArrowBackUp,
+  IconCheck,
+  IconChevronDown,
+  IconClipboardList,
+  IconDots,
+  IconGripVertical,
+  IconPlayerPlayFilled,
+  IconRefresh,
+} from '@tabler/icons-react'
 import { useStore } from '../store'
 import { useUi } from '../ui'
 import { busyPlayerIds, isPlayable, onCourt } from '../logic/courts'
@@ -19,9 +29,9 @@ export function ScheduleScreen() {
   const moveMatch = useStore((s) => s.moveMatch)
   const reopen = useStore((s) => s.reopenMatch)
   const showToast = useStore((s) => s.showToast)
+  const startPlay = useStore((s) => s.startPlay)
   const openFinish = useUi((s) => s.openFinish)
   const openActions = useUi((s) => s.openActions)
-  const startPlay = useStore((s) => s.startPlay)
   const sensors = useDndSensors()
   const [filter, setFilter] = useState<string | null>(null)
   const [showDone, setShowDone] = useState(false)
@@ -36,9 +46,9 @@ export function ScheduleScreen() {
 
   const onGenerate = () => {
     const hasQueued = matches.some((m) => m.status === 'queued')
-    if (hasQueued && !confirm('Rebuild the queue? Custom order of upcoming matches will be reset. Live & finished matches are kept.')) return
+    if (hasQueued && !confirm('Rebuild the queue? Custom order of upcoming matches will be reset. Live and finished matches are kept.')) return
     const n = generate()
-    showToast(n ? `${n} matches scheduled` : 'No new matches — add players to groups first')
+    showToast(n ? `${n} matches scheduled` : 'No new matches. Add players to groups first.')
   }
 
   const onDragEnd = (e: DragEndEvent) => {
@@ -47,16 +57,16 @@ export function ScheduleScreen() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4">
-      <div className="flex items-center justify-between gap-3">
+    <div className="mx-auto max-w-2xl space-y-5">
+      <div className="flex items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Schedule</h1>
-          <p className="text-sm text-ink/60">
+          <h1 className="text-2xl leading-8 font-bold text-ink-strong">Schedule</h1>
+          <p className="text-sm text-muted">
             {matches.length} matches · {matches.filter((m) => m.status === 'done').length} done
           </p>
         </div>
-        <Button variant="ball" onClick={onGenerate}>
-          🎲 {matches.length ? 'Rebuild' : 'Generate'}
+        <Button variant={matches.length ? 'secondary' : 'primary'} size="sm" onClick={onGenerate}>
+          <IconRefresh size={16} /> {matches.length ? 'Rebuild' : 'Generate'}
         </Button>
       </div>
 
@@ -71,9 +81,9 @@ export function ScheduleScreen() {
 
       {matches.length === 0 && (
         <div className="card p-8 text-center">
-          <div className="text-5xl">📋</div>
-          <div className="mt-2 text-lg font-semibold">No matches yet</div>
-          <p className="text-ink/60">Put players in groups, then hit Generate for a round-robin.</p>
+          <IconClipboardList size={40} className="mx-auto text-subtle" />
+          <div className="mt-2 text-lg font-bold text-ink-strong">No matches yet</div>
+          <p className="text-sm text-muted">Put players in groups, then generate a round robin.</p>
         </div>
       )}
 
@@ -85,28 +95,28 @@ export function ScheduleScreen() {
               match={m}
               note={
                 m.status === 'called' ? (
-                  <span className="text-clay">📣 calling · {courtName(m.courtId)}</span>
+                  <span className="text-[rgb(170,130,0)]">{courtName(m.courtId)}</span>
                 ) : (
-                  <span className="text-court">● {courtName(m.courtId)}</span>
+                  <span className="text-primary">{courtName(m.courtId)}</span>
                 )
               }
               right={
                 <div className="flex shrink-0 items-center gap-1">
                   {m.status === 'called' ? (
-                    <Button variant="clay" size="sm" onClick={() => startPlay(m.id)}>
-                      ▶ Play
+                    <Button variant="warning" size="sm" onClick={() => startPlay(m.id)}>
+                      <IconPlayerPlayFilled size={14} className="hidden sm:block" /> Start
                     </Button>
                   ) : (
-                    <Button variant="ball" size="sm" onClick={() => openFinish(m.id)}>
-                      ✓ Finish
+                    <Button variant="lime" size="sm" onClick={() => openFinish(m.id)}>
+                      <IconCheck size={16} stroke={2.5} className="hidden sm:block" /> Finish
                     </Button>
                   )}
                   <button
                     onClick={() => openActions(m.id)}
                     aria-label="Court options"
-                    className="grid h-10 w-8 place-items-center rounded-lg text-xl text-ink/50 hover:bg-ink/5"
+                    className="grid h-9 w-9 place-items-center rounded-full text-muted hover:bg-surface-muted"
                   >
-                    ⋯
+                    <IconDots size={18} />
                   </button>
                 </div>
               }
@@ -116,7 +126,7 @@ export function ScheduleScreen() {
       )}
 
       {queued.length > 0 && (
-        <Section title="Up next" count={queued.length} hint="Drag ⠿ to reorder · Call sends to a court">
+        <Section title="Up next" count={queued.length} hint="Drag to reorder">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -130,7 +140,9 @@ export function ScheduleScreen() {
               ))}
             </SortableContext>
             <DragOverlay>
-              {dragId && <MatchCard match={matches.find((m) => m.id === dragId)!} className="scale-105 shadow-2xl" />}
+              {dragId && (
+                <MatchCard match={matches.find((m) => m.id === dragId)!} className="shadow-[0_4px_16px_rgba(0,0,0,.15)]!" />
+              )}
             </DragOverlay>
           </DndContext>
         </Section>
@@ -139,10 +151,13 @@ export function ScheduleScreen() {
       {done.length > 0 && (
         <section className="space-y-2.5">
           <button className="flex w-full items-center justify-between py-1" onClick={() => setShowDone((v) => !v)}>
-            <h2 className="text-lg font-bold">
-              Finished <span className="text-ink/40">{done.length}</span>
+            <h2 className="text-lg leading-6 font-bold text-ink-strong">
+              Finished <span className="text-subtle">{done.length}</span>
             </h2>
-            <span className="text-sm font-semibold text-ink/50">{showDone ? 'Hide ▲' : 'Show ▼'}</span>
+            <span className="flex items-center gap-1 text-sm font-bold text-primary">
+              {showDone ? 'Hide' : 'Show'}
+              <IconChevronDown size={16} className={`transition-transform ${showDone ? 'rotate-180' : ''}`} />
+            </span>
           </button>
           {showDone &&
             done.map((m) => (
@@ -151,9 +166,9 @@ export function ScheduleScreen() {
                 match={m}
                 note={`${courtName(m.courtId) ?? ''} · ${fmtDur((m.finishedAt ?? 0) - (m.startedAt ?? 0))}`}
                 right={
-                  <button className="text-xs font-semibold text-ink/40 hover:text-clay" onClick={() => reopen(m.id)}>
-                    ↺ Reopen
-                  </button>
+                  <Button variant="ghost" size="sm" className="px-3!" onClick={() => reopen(m.id)}>
+                    <IconArrowBackUp size={16} /> Reopen
+                  </Button>
                 }
               />
             ))}
@@ -167,25 +182,24 @@ function Section({ title, count, hint, children }: { title: string; count: numbe
   return (
     <section className="space-y-2.5">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-lg font-bold">
-          {title} <span className="text-ink/40">{count}</span>
+        <h2 className="text-lg leading-6 font-bold text-ink-strong">
+          {title} <span className="text-subtle">{count}</span>
         </h2>
-        {hint && <span className="text-xs text-ink/50">{hint}</span>}
+        {hint && <span className="text-xs text-muted">{hint}</span>}
       </div>
       {children}
     </section>
   )
 }
 
+/** DS TabMenu (colored): selected = teal fill, others white with ledge. */
 function FilterChip({ active, onClick, label, color }: { active: boolean; onClick: () => void; label: string; color?: string }) {
   return (
     <button
       onClick={onClick}
-      className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full border-[3px] px-3 text-sm font-semibold whitespace-nowrap ${
-        active ? 'border-ink bg-ink text-white' : 'border-ink/15 bg-white'
-      }`}
+      className={`btn h-9 shrink-0 px-4 text-sm whitespace-nowrap ${active ? 'btn-primary' : 'btn-secondary'}`}
     >
-      {color && <span className="h-2.5 w-2.5 rounded-full" style={{ background: color }} />}
+      {color && <span className="h-2 w-2 rounded-full" style={{ background: color }} />}
       {label}
     </button>
   )
@@ -205,14 +219,13 @@ function SortableMatch({ match, pos, blocked }: { match: Match; pos: number; blo
       <MatchCard
         match={match}
         dim={blocked}
-        note={blocked ? 'player on court' : pos === 1 ? 'next up' : undefined}
+        note={blocked ? 'Player on court' : pos === 1 ? <span className="text-primary">Next up</span> : undefined}
         right={
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-1">
             <Button
-              variant={blocked ? 'white' : 'ball'}
+              variant={blocked ? 'secondary' : 'primary'}
               size="sm"
-              className="w-14 px-0!"
-              aria-label={`Send match ${match.num} to a court`}
+              aria-label={`Call match ${match.num} to a court`}
               onClick={() => openPlay(match.id)}
             >
               Call
@@ -222,9 +235,9 @@ function SortableMatch({ match, pos, blocked }: { match: Match; pos: number; blo
               {...listeners}
               {...attributes}
               aria-label="Drag to reorder"
-              className="grid h-10 w-8 cursor-grab touch-none place-items-center rounded-lg text-xl text-ink/40 hover:bg-ink/5 active:cursor-grabbing"
+              className="grid h-10 w-8 cursor-grab touch-none place-items-center rounded-lg text-subtle hover:bg-surface-muted active:cursor-grabbing"
             >
-              ⠿
+              <IconGripVertical size={18} />
             </button>
           </div>
         }

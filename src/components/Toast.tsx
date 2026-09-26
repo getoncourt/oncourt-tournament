@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { IconCircleCheck } from '@tabler/icons-react'
 import { useStore } from '../store'
 
 export function Toast() {
@@ -13,12 +14,16 @@ export function Toast() {
 
   if (!toast) return null
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center px-4 md:bottom-6">
-      <div key={toast.id} className="pop pointer-events-auto flex items-center gap-3 rounded-2xl border-[3px] border-ink bg-ink py-2 pr-2 pl-4 text-white shadow-lg">
-        <span className="font-medium">{toast.text}</span>
-        {toast.undo && (
+    <div className="pointer-events-none fixed inset-x-0 bottom-28 z-40 flex justify-center px-4 md:bottom-6">
+      <div
+        key={toast.id}
+        className="enter pointer-events-auto flex items-center gap-2.5 rounded-full bg-ink-strong py-2 pr-2 pl-4 text-sm text-white shadow-[0_4px_16px_rgba(0,0,0,.2)]"
+      >
+        <IconCircleCheck size={18} className="shrink-0 text-lime-bright" />
+        <span className="font-bold">{toast.text}</span>
+        {toast.undo ? (
           <button
-            className="rounded-xl bg-ball px-3 py-1.5 font-semibold text-ink"
+            className="rounded-full px-3 py-1.5 font-bold text-lime-bright hover:bg-white/10"
             onClick={() => {
               toast.undo?.()
               dismiss()
@@ -26,6 +31,8 @@ export function Toast() {
           >
             Undo
           </button>
+        ) : (
+          <span className="w-2" />
         )}
       </div>
     </div>

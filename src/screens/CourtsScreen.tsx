@@ -1,5 +1,15 @@
 import { useState } from 'react'
 import { DndContext, DragOverlay, useDraggable, useDroppable, type DragEndEvent } from '@dnd-kit/core'
+import {
+  IconBallTennis,
+  IconBolt,
+  IconCheck,
+  IconDots,
+  IconFlag,
+  IconPlayerPlayFilled,
+  IconSpeakerphone,
+  IconTarget,
+} from '@tabler/icons-react'
 import { useGroupMap, usePlayerMap, useStore } from '../store'
 import { useUi } from '../ui'
 import { busyPlayerIds, isPlayable, nextEligible, onCourt } from '../logic/courts'
@@ -41,7 +51,7 @@ export function CourtsScreen({ goSchedule }: { goSchedule: () => void }) {
     if (!m || !court || byCourt.has(court.id)) return
     // dragging a match that's already on a court = move it
     if (onCourt(m)) return moveToCourt(m.id, court.id)
-    if (!isPlayable(m, busy)) return showToast('A player in that match is on court right now')
+    if (!isPlayable(m, busy)) return showToast('A player in that match is on court now')
     callMatch(m.id, court.id)
   }
 
@@ -52,23 +62,26 @@ export function CourtsScreen({ goSchedule }: { goSchedule: () => void }) {
       onDragCancel={() => setDragId(null)}
       onDragEnd={onDragEnd}
     >
-      <div className="mx-auto flex max-w-7xl flex-col gap-5 lg:flex-row lg:items-start">
+      <div className="mx-auto flex max-w-7xl flex-col gap-6 lg:flex-row lg:items-start">
         {/* Courts board */}
         <section className="min-w-0 flex-1 space-y-4">
-          <div className="card flex flex-wrap items-center justify-between gap-x-4 gap-y-3 p-3">
-            <Stepper label="courts" value={courts.length} onChange={setCourtCount} />
-            <div className="flex gap-4 text-center leading-none">
-              <Stat n={callingCount} label="calling" color="text-clay" />
-              <Stat n={liveCount} label="live" color="text-court" />
-              <Stat n={queued.length} label="to play" />
-              <Stat n={doneCount} label="done" color="text-ink/50" />
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <h1 className="text-2xl leading-8 font-bold text-ink-strong">Courts</h1>
+              <p className="text-sm text-muted">
+                {callingCount} calling · {liveCount} live · {queued.length} to play · {doneCount} done
+              </p>
             </div>
-            <Toggle checked={autoAssign} onChange={setAutoAssign} label="Auto next" />
+          </div>
+
+          <div className="card flex flex-wrap items-center justify-between gap-x-4 gap-y-3 px-4 py-3">
+            <Stepper label="Courts" value={courts.length} onChange={setCourtCount} />
+            <Toggle checked={autoAssign} onChange={setAutoAssign} label="Auto call next" />
           </div>
 
           {canFill && (
-            <Button variant="ball" size="lg" className="pop w-full" onClick={fillCourts}>
-              ⚡ Fill {freeCount} free court{freeCount === 1 ? '' : 's'}
+            <Button variant="primary" size="lg" className="enter w-full" onClick={fillCourts}>
+              <IconBolt size={20} /> Fill {freeCount} free court{freeCount === 1 ? '' : 's'}
             </Button>
           )}
 
@@ -80,26 +93,26 @@ export function CourtsScreen({ goSchedule }: { goSchedule: () => void }) {
         </section>
 
         {/* Queue */}
-        <aside className="space-y-3 lg:sticky lg:top-4 lg:w-96 lg:shrink-0">
+        <aside className="space-y-3 lg:sticky lg:top-6 lg:w-96 lg:shrink-0">
           <div className="flex items-baseline justify-between">
-            <h2 className="text-xl font-bold">Up next</h2>
-            <span className="text-xs text-ink/50">
+            <h2 className="text-lg leading-6 font-bold text-ink-strong">Up next</h2>
+            <span className="text-xs text-muted">
               <span className="hidden md:inline">Drag onto a court</span>
               <span className="md:hidden">Long-press to drag</span>
             </span>
           </div>
           {queued.length === 0 ? (
-            <div className="rounded-2xl border-[3px] border-dashed border-ink/20 p-6 text-center text-ink/60">
-              <div className="text-3xl">🏁</div>
-              {matches.length ? 'All matches played!' : 'No schedule yet.'}
+            <div className="card p-6 text-center">
+              <IconFlag size={32} className="mx-auto text-subtle" />
+              <div className="mt-1 font-bold text-ink-strong">{matches.length ? 'All matches played' : 'No schedule yet'}</div>
               {!matches.length && (
-                <Button variant="ball" className="mt-3 w-full" onClick={goSchedule}>
+                <Button variant="primary" className="mt-3 w-full" onClick={goSchedule}>
                   Go to schedule
                 </Button>
               )}
             </div>
           ) : (
-            <div className="space-y-2.5 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto lg:p-1 lg:pb-3">
+            <div className="space-y-2.5 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:p-0.5 lg:pb-3">
               {queued.map((m, i) => (
                 <QueueItem key={m.id} match={m} blocked={!isPlayable(m, busy)} first={i === 0} />
               ))}
@@ -109,18 +122,9 @@ export function CourtsScreen({ goSchedule }: { goSchedule: () => void }) {
       </div>
 
       <DragOverlay dropAnimation={null}>
-        {dragMatch && <MatchCard match={dragMatch} className="rotate-2 scale-105 shadow-2xl" />}
+        {dragMatch && <MatchCard match={dragMatch} className="shadow-[0_4px_16px_rgba(0,0,0,.15)]!" />}
       </DragOverlay>
     </DndContext>
-  )
-}
-
-function Stat({ n, label, color = '' }: { n: number; label: string; color?: string }) {
-  return (
-    <div>
-      <div className={`text-2xl font-bold tabular-nums ${color}`}>{n}</div>
-      <div className="text-[11px] font-semibold tracking-wide text-ink/50 uppercase">{label}</div>
-    </div>
   )
 }
 
@@ -139,14 +143,14 @@ function QueueItem({ match, blocked, first }: { match: Match; blocked: boolean; 
       <MatchCard
         match={match}
         dim={blocked}
-        note={blocked ? 'player on court' : first ? 'next up' : undefined}
+        note={blocked ? 'Player on court' : first ? <span className="text-primary">Next up</span> : undefined}
         className="cursor-grab active:cursor-grabbing"
         right={
           <Button
-            variant={blocked ? 'white' : 'ball'}
+            variant={blocked ? 'secondary' : 'primary'}
             size="sm"
-            className="w-14 shrink-0 px-0!"
-            aria-label={`Send match ${match.num} to a court`}
+            className="shrink-0"
+            aria-label={`Call match ${match.num} to a court`}
             {...noDrag}
             onClick={() => openPlay(match.id)}
           >
@@ -179,48 +183,50 @@ function OccupiedCourt({ court, match }: { court: Court; match: Match }) {
       {...drag.listeners}
       {...drag.attributes}
       key={match.id + match.status}
-      className={`pop card court-lines relative flex min-h-44 cursor-grab flex-col overflow-hidden text-white md:min-h-52 ${
-        drag.isDragging ? 'opacity-30' : ''
-      }`}
+      className={`enter relative flex min-h-48 cursor-grab flex-col overflow-hidden rounded-[20px] text-white md:min-h-56 ${
+        calling ? 'court-calling' : 'court-lines'
+      } ${drag.isDragging ? 'opacity-30' : ''}`}
     >
-      {calling && <div className="calling-overlay pointer-events-none absolute inset-0" />}
-      <div className="relative flex items-center justify-between gap-1 px-2 pt-2 md:px-3 md:pt-3">
-        <span className="rounded-lg bg-ink/70 px-2 py-0.5 text-xs font-bold md:text-sm">{court.name}</span>
+      <div className="flex items-center justify-between gap-1 px-3 pt-3">
+        <span className="text-sm font-bold">{court.name}</span>
         <div className="flex items-center gap-1">
-          <span
-            className={`flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-xs font-semibold md:text-sm ${
-              calling ? 'bg-clay' : 'bg-ink/70'
-            }`}
-          >
-            {calling ? '📣' : <span className="live-dot h-2 w-2 rounded-full bg-red-500" />}
-            <Elapsed since={calling ? match.calledAt : match.startedAt} />
-          </span>
+          {calling ? (
+            <span className="tag bg-warning text-ink-strong">
+              <IconSpeakerphone size={14} />
+              <Elapsed since={match.calledAt} />
+            </span>
+          ) : (
+            <span className="tag bg-lime-bright text-primary-900">
+              <span className="live-dot h-1.5 w-1.5 rounded-full bg-danger" />
+              <Elapsed since={match.startedAt} />
+            </span>
+          )}
           <button
             {...noDrag}
             onClick={() => openActions(match.id)}
             aria-label={`${court.name} options`}
-            className="grid h-7 w-7 place-items-center rounded-lg bg-ink/70 text-base leading-none hover:bg-ink"
+            className="grid h-7 w-7 place-items-center rounded-full bg-white/15 hover:bg-white/25"
           >
-            ⋯
+            <IconDots size={16} />
           </button>
         </div>
       </div>
-      <div className="relative flex flex-1 flex-col items-center justify-center gap-1 px-3 py-2 text-center">
-        <span className="rounded-md px-2 text-xs font-bold" style={{ background: g?.color }}>
+      <div className="flex flex-1 flex-col items-center justify-center gap-1 px-3 py-2 text-center">
+        <span className="text-xs font-bold text-primary-200">
           {calling ? 'Calling players' : g?.name} · #{match.num}
         </span>
-        <div className="w-full truncate text-base leading-tight font-bold drop-shadow md:text-xl">{players.get(match.p1)?.name}</div>
-        <div className="grid h-7 w-7 place-items-center rounded-full bg-ball text-xs font-black text-ink">VS</div>
-        <div className="w-full truncate text-base leading-tight font-bold drop-shadow md:text-xl">{players.get(match.p2)?.name}</div>
+        <div className="w-full truncate text-base leading-6 font-bold md:text-lg">{players.get(match.p1)?.name}</div>
+        <div className="text-[10px] font-black tracking-wider text-lime-bright uppercase">vs</div>
+        <div className="w-full truncate text-base leading-6 font-bold md:text-lg">{players.get(match.p2)?.name}</div>
       </div>
-      <div className="relative p-2 pt-0 md:p-3 md:pt-0">
+      <div className="p-3 pt-0">
         {calling ? (
-          <Button variant="clay" className="w-full" {...noDrag} onClick={() => startPlay(match.id)}>
-            ▶ Players ready · Play
+          <Button variant="warning" className="w-full" {...noDrag} onClick={() => startPlay(match.id)}>
+            <IconPlayerPlayFilled size={16} /> Start match
           </Button>
         ) : (
-          <Button variant="ball" className="w-full" {...noDrag} onClick={() => openFinish(match.id)}>
-            ✓ Finish
+          <Button variant="lime" className="w-full" {...noDrag} onClick={() => openFinish(match.id)}>
+            <IconCheck size={18} stroke={2.5} /> Finish
           </Button>
         )}
       </div>
@@ -247,27 +253,29 @@ function FreeCourt({
   return (
     <div
       ref={setNodeRef}
-      className={`card court-empty flex min-h-44 flex-col p-2.5 transition-transform md:min-h-52 md:p-3 ${
-        isOver ? 'scale-[1.03] bg-ball/40!' : dragging ? 'outline-4 outline-offset-2 outline-ball outline-dashed' : ''
+      className={`court-free flex min-h-48 flex-col rounded-[20px] p-3 transition-colors md:min-h-56 ${
+        isOver ? 'bg-lime-soft! shadow-[inset_0_0_0_2px_var(--color-lime),0_4px_0_0_var(--color-line)]!' : dragging ? 'shadow-[inset_0_0_0_2px_var(--color-primary-200),0_4px_0_0_var(--color-line)]!' : ''
       }`}
     >
       <div className="flex items-center justify-between">
-        <span className="rounded-lg bg-court px-2 py-0.5 text-sm font-bold text-white">{court.name}</span>
-        <span className="text-sm font-semibold text-court">Free</span>
+        <span className="text-sm font-bold text-ink-strong">{court.name}</span>
+        <span className="tag bg-lime-soft text-lime-900">Free</span>
       </div>
-      <div className="flex flex-1 flex-col items-center justify-center gap-1 text-center text-court-dark">
-        <div className="text-3xl md:text-4xl">{isOver ? '🎯' : '🎾'}</div>
-        <div className="text-sm font-medium opacity-70">{dragging ? 'Drop match here' : 'Court is open'}</div>
+      <div className="flex flex-1 flex-col items-center justify-center gap-1 text-center">
+        {isOver ? <IconTarget size={32} className="text-lime-ink" /> : <IconBallTennis size={32} className="text-primary-200" />}
+        <div className="text-sm text-muted">{dragging ? 'Drop match here' : 'Court is open'}</div>
       </div>
       {next ? (
-        <Button variant="court" className="h-auto! w-full flex-col gap-0! py-2" onClick={() => callMatch(next.id, court.id)}>
-          <span>📣 Call #{next.num}</span>
+        <Button variant="primary" className="h-auto! w-full flex-col gap-0! py-2" onClick={() => callMatch(next.id, court.id)}>
+          <span className="flex items-center gap-1.5">
+            <IconSpeakerphone size={16} /> Call #{next.num}
+          </span>
           <span className="w-full truncate text-xs font-normal opacity-80">
             {players.get(next.p1)?.name} vs {players.get(next.p2)?.name}
           </span>
         </Button>
       ) : (
-        <div className="py-3 text-center text-sm text-ink/50">No match ready</div>
+        <div className="py-3 text-center text-sm text-muted">No match ready</div>
       )}
     </div>
   )

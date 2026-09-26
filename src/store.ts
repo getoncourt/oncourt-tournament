@@ -5,7 +5,8 @@ import { interleaveGroups, roundRobinRounds } from './logic/roundRobin'
 import { freeCourts, nextEligible, onCourt } from './logic/courts'
 import { seedState } from './logic/seed'
 
-export const GROUP_COLORS = ['#3b82f6', '#f97316', '#a855f7', '#ec4899', '#14b8a6', '#eab308', '#ef4444', '#22c55e']
+/** Group colors from the DS tag palettes (blue, mojo, indigo, globin, yellow, teal, lime). */
+export const GROUP_COLORS = ['rgb(0,136,255)', 'rgb(197,75,59)', 'rgb(97,85,245)', 'rgb(70,131,82)', 'rgb(237,190,75)', 'rgb(52,123,120)', 'rgb(112,153,11)', 'rgb(208,109,96)']
 
 const uid = () => Math.random().toString(36).slice(2, 10)
 
@@ -193,7 +194,7 @@ export const useStore = create<State>()(
         const m = get().matches.find((x) => x.id === matchId)
         const court = get().courts.find((c) => c.id === courtId)
         if (!m || !court) return
-        commit(`#${m.num} → ${court.name} · calling players`, (ms) =>
+        commit(`#${m.num} called to ${court.name}`, (ms) =>
           ms.map((x) => (x.id === matchId ? called(x, courtId) : x)),
         )
       },
@@ -206,7 +207,7 @@ export const useStore = create<State>()(
       startPlay: (matchId) => {
         const m = get().matches.find((x) => x.id === matchId)
         if (!m || m.status !== 'called') return
-        commit(`#${m.num} started — play!`, (ms) =>
+        commit(`#${m.num} started`, (ms) =>
           ms.map((x) => (x.id === matchId ? { ...x, status: 'live' as const, startedAt: Date.now() } : x)),
         )
       },
@@ -237,7 +238,7 @@ export const useStore = create<State>()(
               const next = nextEligible(ms)
               if (next) {
                 ms = ms.map((m) => (m.id === next.id ? called(m, court.id) : m))
-                text = `${court.name} → #${next.num} · calling players`
+                text = `#${match.num} done · #${next.num} called to ${court.name}`
               }
             }
             return ms
@@ -247,7 +248,7 @@ export const useStore = create<State>()(
       fillCourts: () => {
         let count = 0
         commit(
-          () => `${count} match${count === 1 ? '' : 'es'} called to court`,
+          () => `${count} match${count === 1 ? '' : 'es'} called to courts`,
           (ms) => {
             for (const c of freeCourts(get().courts, ms)) {
               const next = nextEligible(ms)
@@ -271,7 +272,7 @@ export const useStore = create<State>()(
       }
     },
     {
-      name: 'oncourt-tournament-v2',
+      name: 'oncourt-tournament-v3',
       partialize: ({ players, groups, courts, matches, autoAssign, nextNum }) => ({
         players, groups, courts, matches, autoAssign, nextNum,
       }),
